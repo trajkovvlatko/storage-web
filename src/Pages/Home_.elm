@@ -1,8 +1,8 @@
 module Pages.Home_ exposing (Model, Msg, page, view)
 
 import Auth
-import Html
-import Html.Events as Events
+import Html exposing (button, h1, text)
+import Html.Events as Events exposing (onClick)
 import Page
 import Request exposing (Request)
 import Shared
@@ -57,7 +57,7 @@ view user _ =
     { title = "Homepage"
     , body =
         UI.layout (Just user)
-            [ Html.h1 [] [ Html.text ("Hello, " ++ user.token ++ "!") ]
-            , Html.button [ Events.onClick ClickedLogout ] [ Html.text "Logout" ]
+            [ text ("Token: " ++ user.token)
+            , button [ onClick ClickedLogout ] [ text "Logout" ]
             ]
     }

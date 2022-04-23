@@ -131,8 +131,7 @@ view model =
                         ]
                     ]
                 , Html.button
-                    []
-                    -- [ disabled (String.isEmpty model.credentials.email && String.isEmpty model.credentials.password) ]
+                    [ disabled (String.isEmpty model.credentials.email && String.isEmpty model.credentials.password) ]
                     [ text "Login" ]
                 ]
             ]

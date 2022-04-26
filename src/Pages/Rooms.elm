@@ -2,13 +2,12 @@ module Pages.Rooms exposing (Model, Msg, page)
 
 import Auth
 import Const exposing (host)
-import Gen.Params.Rooms exposing (Params)
-import Gen.Route exposing (Route)
-import Html exposing (Html, a, button, div, h1, span, table, td, text, th, thead, tr)
+import Domain.Room exposing (Room, Rooms, roomDecoder, roomsDecoder)
+import Gen.Route
+import Html exposing (Html, a, button, div, h1, table, td, text, th, thead, tr)
 import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
 import Http exposing (header)
-import Json.Decode as Decode exposing (Decoder, field, int, list, map, map2, string)
 import Page
 import Request exposing (Request)
 import Shared
@@ -41,26 +40,6 @@ type alias Model =
     }
 
 
-type alias Room =
-    { id : Int, name : String }
-
-
-type alias Rooms =
-    List Room
-
-
-roomsResponseDecoder : Decoder Rooms
-roomsResponseDecoder =
-    list roomResponseDecoder
-
-
-roomResponseDecoder : Decoder Room
-roomResponseDecoder =
-    map2 Room
-        (field "id" int)
-        (field "name" string)
-
-
 
 -- INIT
 
@@ -80,7 +59,7 @@ init storage =
                 , headers = [ header "token" user.token ]
                 , url = host ++ "/rooms"
                 , body = Http.emptyBody
-                , expect = Http.expectJson GotResponse roomsResponseDecoder
+                , expect = Http.expectJson GotResponse roomsDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }
@@ -112,7 +91,7 @@ update storage msg model =
                         , headers = [ header "token" u.token ]
                         , url = host ++ "/rooms/" ++ String.fromInt id
                         , body = Http.emptyBody
-                        , expect = Http.expectJson Deleted roomResponseDecoder
+                        , expect = Http.expectJson Deleted roomDecoder
                         , timeout = Nothing
                         , tracker = Nothing
                         }
@@ -133,15 +112,6 @@ update storage msg model =
 
                         Err _ ->
                             ( { state = Failure, rooms = [] }, Cmd.none )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
 
 
 
@@ -182,10 +152,14 @@ view user model =
 
 roomRow : Room -> Html Msg
 roomRow room =
+    let
+        editUrl =
+            Gen.Route.toHref (Gen.Route.Rooms__Id___Edit { id = String.fromInt room.id })
+    in
     tr []
         [ td [] [ text (String.fromInt room.id) ]
         , td [] [ text room.name ]
         , td [] [ a [ href ("/storage_units/" ++ String.fromInt room.id) ] [ text "Storage units" ] ]
-        , td [] [ a [ href ("/rooms/" ++ String.fromInt room.id ++ "/edit") ] [ text "Edit" ] ]
+        , td [] [ a [ href editUrl ] [ text "Edit" ] ]
         , td [] [ button [ onClick (Delete room.id) ] [ text "Delete" ] ]
         ]

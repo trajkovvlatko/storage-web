@@ -2,14 +2,12 @@ module Pages.Rooms.New exposing (Model, Msg, page)
 
 import Auth exposing (User)
 import Const exposing (host)
-import Effect exposing (Effect)
-import Gen.Params.Rooms.New exposing (Params)
+import Domain.Room exposing (Room, roomDecoder)
 import Gen.Route
-import Html exposing (button, div, form, h1, input, label, text)
+import Html exposing (button, div, form, input, label, text)
 import Html.Attributes exposing (disabled, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (header, multipartBody, stringPart)
-import Json.Decode exposing (Decoder, field, int, map2, string)
 import Page
 import Request exposing (Request)
 import Shared
@@ -45,10 +43,6 @@ type alias Model =
     }
 
 
-type alias Room =
-    { id : Int, name : String }
-
-
 init : Storage -> ( Model, Cmd Msg )
 init _ =
     ( { state = Pending, name = "" }
@@ -64,11 +58,6 @@ type Msg
     = UpdatedName String
     | SubmittedRoomForm
     | GotResponse (Result Http.Error Room)
-
-
-createRoomResponseDecoder : Decoder Room
-createRoomResponseDecoder =
-    map2 Room (field "id" int) (field "name" string)
 
 
 update : Request -> Maybe User -> Msg -> Model -> ( Model, Cmd Msg )
@@ -90,7 +79,7 @@ update req user msg model =
                         , url = host ++ "/rooms"
                         , body =
                             multipartBody [ stringPart "name" model.name ]
-                        , expect = Http.expectJson GotResponse createRoomResponseDecoder
+                        , expect = Http.expectJson GotResponse roomDecoder
                         , timeout = Nothing
                         , tracker = Nothing
                         }
@@ -105,15 +94,6 @@ update req user msg model =
 
                         Err _ ->
                             ( model, Cmd.none )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
 
 
 

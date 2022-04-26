@@ -2,13 +2,13 @@ module Pages.Rooms.Id_.Edit exposing (Model, Msg, page)
 
 import Auth exposing (User)
 import Const exposing (host)
+import Domain.Room exposing (Room, roomDecoder)
 import Gen.Params.Rooms.Id_.Edit exposing (Params)
 import Gen.Route
 import Html exposing (button, div, form, input, label, text)
 import Html.Attributes exposing (disabled, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (header, multipartBody, stringPart)
-import Json.Decode exposing (Decoder, field, int, map2, string)
 import Page
 import Request
 import Shared
@@ -44,17 +44,6 @@ type alias Model =
     }
 
 
-type alias Room =
-    { id : Int, name : String }
-
-
-roomResponseDecoder : Decoder Room
-roomResponseDecoder =
-    map2 Room
-        (field "id" int)
-        (field "name" string)
-
-
 init : Request.With Params -> Storage -> ( Model, Cmd Msg )
 init req storage =
     case storage.user of
@@ -70,7 +59,7 @@ init req storage =
                 , headers = [ header "token" user.token ]
                 , url = host ++ "/rooms/" ++ req.params.id
                 , body = Http.emptyBody
-                , expect = Http.expectJson GotGetResponse roomResponseDecoder
+                , expect = Http.expectJson GotGetResponse roomDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }
@@ -86,11 +75,6 @@ type Msg
     | SubmittedRoomForm
     | GotGetResponse (Result Http.Error Room)
     | GotPatchResponse (Result Http.Error Room)
-
-
-updateRoomResponseDecoder : Decoder Room
-updateRoomResponseDecoder =
-    map2 Room (field "id" int) (field "name" string)
 
 
 update : Request.With Params -> Maybe User -> Msg -> Model -> ( Model, Cmd Msg )
@@ -122,7 +106,7 @@ update req user msg model =
                                 , url = host ++ "/rooms/" ++ String.fromInt r.id
                                 , body =
                                     multipartBody [ stringPart "name" r.name ]
-                                , expect = Http.expectJson GotPatchResponse updateRoomResponseDecoder
+                                , expect = Http.expectJson GotPatchResponse roomDecoder
                                 , timeout = Nothing
                                 , tracker = Nothing
                                 }
@@ -145,15 +129,6 @@ update req user msg model =
 
                         Err _ ->
                             ( model, Cmd.none )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
 
 
 

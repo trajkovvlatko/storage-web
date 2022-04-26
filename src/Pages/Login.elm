@@ -3,10 +3,10 @@ module Pages.Login exposing (Model, Msg, page)
 import Const exposing (host)
 import Gen.Params.Login exposing (Params)
 import Html exposing (button, div, form, input, label, text)
-import Html.Attributes exposing (disabled, required, type_, value)
+import Html.Attributes exposing (disabled, type_)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (multipartBody, stringPart)
-import Json.Decode as Decode exposing (Decoder, field, map, string)
+import Json.Decode exposing (Decoder, field, string)
 import Page
 import Request
 import Shared
@@ -16,12 +16,12 @@ import View exposing (View)
 
 
 page : Shared.Model -> Request.With Params -> Page.With Model Msg
-page shared req =
+page shared _ =
     Page.element
         { init = init
         , update = update shared.storage
         , view = view
-        , subscriptions = subscriptions
+        , subscriptions = \_ -> Sub.none
         }
 
 
@@ -35,10 +35,6 @@ type alias Credentials =
 
 type alias Model =
     { credentials : Credentials }
-
-
-type alias Response =
-    { token : String }
 
 
 init : ( Model, Cmd Msg )
@@ -72,7 +68,7 @@ update storage msg model =
             , Cmd.none
             )
 
-        UpdatedPassword password ->
+        UpdatedPassword _ ->
             ( { model | credentials = { email = model.credentials.email, password = model.credentials.password } }
             , Cmd.none
             )
@@ -99,15 +95,6 @@ update storage msg model =
 
                 Err _ ->
                     ( model, Cmd.none )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.none
 
 
 

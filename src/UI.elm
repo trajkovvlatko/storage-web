@@ -2,14 +2,8 @@ module UI exposing (layout)
 
 import Auth
 import Gen.Route as Route exposing (Route)
-import Html exposing (Html, a, div, h1, header, main_, strong, text)
+import Html exposing (Html, a, div, header, main_, text)
 import Html.Attributes as Attr exposing (href)
-import Html.Events as Events
-
-
-viewLink : String -> Route -> Html msg
-viewLink label route =
-    a [ href (Route.toHref route) ] [ text label ]
 
 
 authButtons : Maybe Auth.User -> Html msg

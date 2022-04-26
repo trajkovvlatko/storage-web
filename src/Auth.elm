@@ -3,13 +3,6 @@ module Auth exposing
     , beforeProtectedInit
     )
 
-{-|
-
-@docs User
-@docs beforeProtectedInit
-
--}
-
 import Domain.User
 import ElmSpa.Page as ElmSpa
 import Gen.Route exposing (Route)

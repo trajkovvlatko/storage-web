@@ -1,8 +1,8 @@
 module Pages.Home_ exposing (Model, Msg, page, view)
 
 import Auth
-import Html exposing (button, h1, text)
-import Html.Events as Events exposing (onClick)
+import Html exposing (button, text)
+import Html.Events exposing (onClick)
 import Page
 import Request exposing (Request)
 import Shared

@@ -4,8 +4,9 @@ import Auth
 import Const exposing (host)
 import Gen.Params.Rooms exposing (Params)
 import Gen.Route exposing (Route)
-import Html exposing (Html, a, div, h1, span, table, td, text, th, thead, tr)
+import Html exposing (Html, a, button, div, h1, span, table, td, text, th, thead, tr)
 import Html.Attributes exposing (href)
+import Html.Events exposing (onClick)
 import Http exposing (header)
 import Json.Decode as Decode exposing (Decoder, field, int, list, map, map2, string)
 import Page
@@ -31,6 +32,7 @@ type State
     = Failure
     | Loading
     | Done
+    | DeleteFailure
 
 
 type alias Model =
@@ -91,22 +93,46 @@ init storage =
 
 type Msg
     = GotResponse (Result Http.Error Rooms)
+    | Delete Int
+    | Deleted (Result Http.Error Room)
 
 
 update : Storage -> Msg -> Model -> ( Model, Cmd Msg )
 update storage msg model =
-    case msg of
-        GotResponse result ->
-            case result of
-                Ok response ->
-                    ( { state = Done, rooms = response }
-                    , Cmd.none
+    case storage.user of
+        Nothing ->
+            ( model, Cmd.none )
+
+        Just u ->
+            case msg of
+                Delete id ->
+                    ( model
+                    , Http.request
+                        { method = "DELETE"
+                        , headers = [ header "token" u.token ]
+                        , url = host ++ "/rooms/" ++ String.fromInt id
+                        , body = Http.emptyBody
+                        , expect = Http.expectJson Deleted roomResponseDecoder
+                        , timeout = Nothing
+                        , tracker = Nothing
+                        }
                     )
 
-                Err _ ->
-                    ( { state = Failure, rooms = [] }
-                    , Cmd.none
-                    )
+                Deleted result ->
+                    case result of
+                        Ok response ->
+                            ( { model | rooms = List.filter (\x -> x.id /= response.id) model.rooms }, Cmd.none )
+
+                        Err _ ->
+                            ( { model | state = DeleteFailure }, Cmd.none )
+
+                GotResponse result ->
+                    case result of
+                        Ok response ->
+                            ( { state = Done, rooms = response }, Cmd.none )
+
+                        Err _ ->
+                            ( { state = Failure, rooms = [] }, Cmd.none )
 
 
 
@@ -132,6 +158,9 @@ view user model =
                 Failure ->
                     div [] [ text "Failed to load rooms." ]
 
+                DeleteFailure ->
+                    div [] [ text "Failed to delete a room." ]
+
                 Loading ->
                     div [] [ text "Loading rooms..." ]
 
@@ -141,6 +170,7 @@ view user model =
                         (thead []
                             [ th [] [ text "ID" ]
                             , th [] [ text "Name" ]
+                            , th [] [ text "" ]
                             , th [] [ text "" ]
                             ]
                             :: List.map roomRow model.rooms
@@ -156,4 +186,6 @@ roomRow room =
         [ td [] [ text (String.fromInt room.id) ]
         , td [] [ text room.name ]
         , td [] [ a [ href ("/storage_units/" ++ String.fromInt room.id) ] [ text "Storage units" ] ]
+        , td [] [ a [ href ("/rooms/" ++ String.fromInt room.id ++ "/edit") ] [ text "Edit" ] ]
+        , td [] [ button [ onClick (Delete room.id) ] [ text "Delete" ] ]
         ]

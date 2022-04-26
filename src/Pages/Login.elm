@@ -2,7 +2,7 @@ module Pages.Login exposing (Model, Msg, page)
 
 import Const exposing (host)
 import Gen.Params.Login exposing (Params)
-import Html exposing (div, form, input, label, text)
+import Html exposing (button, div, form, input, label, text)
 import Html.Attributes exposing (disabled, required, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (multipartBody, stringPart)
@@ -130,7 +130,7 @@ view model =
                         , input [ type_ "password", onInput UpdatedPassword ] []
                         ]
                     ]
-                , Html.button
+                , button
                     [ disabled (String.isEmpty model.credentials.email && String.isEmpty model.credentials.password) ]
                     [ text "Login" ]
                 ]

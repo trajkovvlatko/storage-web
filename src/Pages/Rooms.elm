@@ -3,6 +3,7 @@ module Pages.Rooms exposing (Model, Msg, page)
 import Auth
 import Const exposing (host)
 import Gen.Params.Rooms exposing (Params)
+import Gen.Route exposing (Route)
 import Html exposing (Html, a, div, h1, span, table, td, text, th, thead, tr)
 import Html.Attributes exposing (href)
 import Http exposing (header)
@@ -144,6 +145,7 @@ view user model =
                             ]
                             :: List.map roomRow model.rooms
                         )
+            , a [ href (Gen.Route.toHref Gen.Route.Rooms__New) ] [ text "Add new room" ]
             ]
     }
 

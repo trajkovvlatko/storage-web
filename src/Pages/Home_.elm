@@ -54,7 +54,7 @@ update storage msg model =
 
 view : Auth.User -> Model -> View Msg
 view user _ =
-    { title = "Homepage"
+    { title = "Storage"
     , body =
         UI.layout (Just user)
             [ text ("Token: " ++ user.token)

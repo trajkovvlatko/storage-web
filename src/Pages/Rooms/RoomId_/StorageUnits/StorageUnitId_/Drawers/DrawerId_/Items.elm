@@ -1,9 +1,9 @@
-module Pages.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers exposing (Model, Msg, page)
+module Pages.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers.DrawerId_.Items exposing (Model, Msg, page)
 
 import Auth exposing (User)
 import Const exposing (host)
-import Domain.Drawer exposing (Drawer, Drawers, drawerDecoder, drawersDecoder)
-import Gen.Params.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers exposing (Params)
+import Domain.Item exposing (Item, Items, itemDecoder, itemsDecoder)
+import Gen.Params.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers.DrawerId_.Items exposing (Params)
 import Gen.Route exposing (toHref)
 import Html exposing (Html, a, button, div, h1, table, td, text, th, thead, tr)
 import Html.Attributes exposing (href)
@@ -37,9 +37,10 @@ type State
 
 type alias Model =
     { state : State
-    , drawers : Drawers
+    , items : Items
     , roomId : String
     , storageUnitId : String
+    , drawerId : String
     }
 
 
@@ -51,18 +52,28 @@ init : Request.With Params -> Storage -> ( Model, Cmd Msg )
 init { params } storage =
     case storage.user of
         Nothing ->
-            ( { state = Failure, drawers = [], roomId = params.roomId, storageUnitId = params.storageUnitId }
+            ( { state = Failure
+              , items = []
+              , roomId = params.roomId
+              , storageUnitId = params.storageUnitId
+              , drawerId = params.drawerId
+              }
             , Cmd.none
             )
 
         Just user ->
-            ( { state = Loading, drawers = [], roomId = params.roomId, storageUnitId = params.storageUnitId }
+            ( { state = Loading
+              , items = []
+              , roomId = params.roomId
+              , storageUnitId = params.storageUnitId
+              , drawerId = params.drawerId
+              }
             , Http.request
                 { method = "GET"
                 , headers = [ header "token" user.token ]
-                , url = host ++ "/drawers?storage_unit_id=" ++ params.storageUnitId
+                , url = host ++ "/items?drawer_id=" ++ params.drawerId
                 , body = Http.emptyBody
-                , expect = Http.expectJson GotResponse drawersDecoder
+                , expect = Http.expectJson GotResponse itemsDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }
@@ -74,9 +85,9 @@ init { params } storage =
 
 
 type Msg
-    = GotResponse (Result Http.Error Drawers)
+    = GotResponse (Result Http.Error Items)
     | Delete Int
-    | Deleted (Result Http.Error Drawer)
+    | Deleted (Result Http.Error Item)
 
 
 update : Request.With Params -> Maybe User -> Msg -> Model -> ( Model, Cmd Msg )
@@ -92,9 +103,9 @@ update _ user msg model =
                     , Http.request
                         { method = "DELETE"
                         , headers = [ header "token" u.token ]
-                        , url = host ++ "/drawers/" ++ String.fromInt id
+                        , url = host ++ "/items/" ++ String.fromInt id
                         , body = Http.emptyBody
-                        , expect = Http.expectJson Deleted drawerDecoder
+                        , expect = Http.expectJson Deleted itemDecoder
                         , timeout = Nothing
                         , tracker = Nothing
                         }
@@ -103,7 +114,7 @@ update _ user msg model =
                 Deleted result ->
                     case result of
                         Ok response ->
-                            ( { model | drawers = List.filter (\x -> x.id /= response.id) model.drawers }
+                            ( { model | items = List.filter (\x -> x.id /= response.id) model.items }
                             , Cmd.none
                             )
 
@@ -113,22 +124,23 @@ update _ user msg model =
                 GotResponse result ->
                     case result of
                         Ok response ->
-                            ( { model | state = Done, drawers = response }, Cmd.none )
+                            ( { model | state = Done, items = response }, Cmd.none )
 
                         Err _ ->
-                            ( { model | state = Failure, drawers = [] }, Cmd.none )
+                            ( { model | state = Failure, items = [] }, Cmd.none )
 
 
 
 -- VIEW
 
 
-newUrl : String -> String -> String
-newUrl roomId storageUnitId =
+newUrl : String -> String -> String -> String
+newUrl roomId storageUnitId drawerId =
     toHref
-        (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers__New
+        (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers__DrawerId___Items__New
             { roomId = roomId
             , storageUnitId = storageUnitId
+            , drawerId = drawerId
             }
         )
 
@@ -138,7 +150,7 @@ view user model =
     { title = "Homepage"
     , body =
         UI.layout (Just user)
-            [ h1 [] [ text "Drawers" ]
+            [ h1 [] [ text "Items" ]
             , case model.state of
                 Failure ->
                     div [] [ text "Failed to load drawers." ]
@@ -154,39 +166,38 @@ view user model =
                         []
                         (thead []
                             [ th [] [ text "ID" ]
-                            , th [] [ text "Note" ]
-                            , th [] [ text "Level" ]
+                            , th [] [ text "Name" ]
+                            , th [] [ text "Color" ]
+                            , th [] [ text "Item type" ]
                             , th [] [ text "" ]
                             , th [] [ text "" ]
                             ]
-                            :: List.map (\row -> drawerRow model row) model.drawers
+                            :: List.map (\row -> itemRow model row) model.items
                         )
-            , a [ href (newUrl model.roomId model.storageUnitId) ] [ text "Add new drawer" ]
+            , a [ href (newUrl model.roomId model.storageUnitId model.drawerId) ] [ text "Add new item" ]
             ]
     }
 
 
-drawerRow : Model -> Drawer -> Html Msg
-drawerRow model drawer =
-    let
-        params =
-            { roomId = model.roomId
-            , storageUnitId = model.storageUnitId
-            , drawerId = String.fromInt drawer.id
-            }
-
-        itemsUrl =
-            toHref (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers__DrawerId___Items params)
-
-        editUrl =
-            toHref
-                (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers__DrawerId___Edit params)
-    in
+itemRow : Model -> Item -> Html Msg
+itemRow model item =
+    -- let
+    --     editUrl =
+    --         toHref
+    --             (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers__DrawerId___Edit
+    --                 { roomId = String.fromInt 1 -- TODO FIX THIS
+    --                 , storageUnitId = String.fromInt item.storage_unit_id
+    --                 , drawerId = String.fromInt item.drawer_id
+    --                 , itemId = String.fromInt item.id
+    --                 }
+    --             )
+    -- in
     tr []
-        [ td [] [ text (String.fromInt drawer.id) ]
-        , td [] [ text drawer.note ]
-        , td [] [ text (String.fromInt drawer.level) ]
-        , td [] [ a [ href itemsUrl ] [ text "Items" ] ]
-        , td [] [ a [ href editUrl ] [ text "Edit" ] ]
-        , td [] [ button [ onClick (Delete drawer.id) ] [ text "Delete" ] ]
+        [ td [] [ text (String.fromInt item.id) ]
+        , td [] [ text item.name ]
+        , td [] [ text (String.fromInt item.color_id) ]
+        , td [] [ text (String.fromInt item.item_type_id) ]
+
+        -- , td [] [ a [ href editUrl ] [ text "Edit" ] ]
+        , td [] [ button [ onClick (Delete item.id) ] [ text "Delete" ] ]
         ]

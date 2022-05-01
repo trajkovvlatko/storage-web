@@ -16,7 +16,7 @@ authButtons user =
             div []
                 [ a [ href (Route.toHref Route.Home_) ] [ text "Home" ]
                 , text " | "
-                , a [ href (Route.toHref Route.Rooms) ] [ text "Rooms" ]
+                , a [ href (Route.toHref Route.Rooms) ] [ text "Browse" ]
                 , text " | "
                 , a [ href (Route.toHref Route.Home_) ] [ text "Logout" ]
                 ]

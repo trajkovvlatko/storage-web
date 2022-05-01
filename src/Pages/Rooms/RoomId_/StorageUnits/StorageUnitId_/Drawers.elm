@@ -1,9 +1,9 @@
-module Pages.Rooms.RoomId_.StorageUnits exposing (Model, Msg, page)
+module Pages.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers exposing (Model, Msg, page)
 
 import Auth exposing (User)
 import Const exposing (host)
-import Domain.StorageUnit exposing (StorageUnit, StorageUnits, storageUnitDecoder, storageUnitsDecoder)
-import Gen.Params.Rooms.RoomId_.StorageUnits exposing (Params)
+import Domain.Drawer exposing (Drawer, Drawers, drawerDecoder, drawersDecoder)
+import Gen.Params.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers exposing (Params)
 import Gen.Route exposing (toHref)
 import Html exposing (Html, a, button, div, h1, table, td, text, th, thead, tr)
 import Html.Attributes exposing (href)
@@ -37,8 +37,9 @@ type State
 
 type alias Model =
     { state : State
-    , storageUnits : StorageUnits
+    , drawers : Drawers
     , roomId : String
+    , storageUnitId : String
     }
 
 
@@ -50,18 +51,18 @@ init : Request.With Params -> Storage -> ( Model, Cmd Msg )
 init { params } storage =
     case storage.user of
         Nothing ->
-            ( { state = Failure, storageUnits = [], roomId = params.roomId }
+            ( { state = Failure, drawers = [], roomId = params.roomId, storageUnitId = params.storageUnitId }
             , Cmd.none
             )
 
         Just user ->
-            ( { state = Loading, storageUnits = [], roomId = params.roomId }
+            ( { state = Loading, drawers = [], roomId = params.roomId, storageUnitId = params.storageUnitId }
             , Http.request
                 { method = "GET"
                 , headers = [ header "token" user.token ]
-                , url = host ++ "/storage_units?room_id=" ++ params.roomId
+                , url = host ++ "/drawers?storage_unit_id=" ++ params.storageUnitId
                 , body = Http.emptyBody
-                , expect = Http.expectJson GotResponse storageUnitsDecoder
+                , expect = Http.expectJson GotResponse drawersDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }
@@ -73,9 +74,9 @@ init { params } storage =
 
 
 type Msg
-    = GotResponse (Result Http.Error StorageUnits)
+    = GotResponse (Result Http.Error Drawers)
     | Delete Int
-    | Deleted (Result Http.Error StorageUnit)
+    | Deleted (Result Http.Error Drawer)
 
 
 update : Request.With Params -> Maybe User -> Msg -> Model -> ( Model, Cmd Msg )
@@ -91,9 +92,9 @@ update _ user msg model =
                     , Http.request
                         { method = "DELETE"
                         , headers = [ header "token" u.token ]
-                        , url = host ++ "/storage_units/" ++ String.fromInt id
+                        , url = host ++ "/drawers/" ++ String.fromInt id
                         , body = Http.emptyBody
-                        , expect = Http.expectJson Deleted storageUnitDecoder
+                        , expect = Http.expectJson Deleted drawerDecoder
                         , timeout = Nothing
                         , tracker = Nothing
                         }
@@ -102,7 +103,7 @@ update _ user msg model =
                 Deleted result ->
                     case result of
                         Ok response ->
-                            ( { model | storageUnits = List.filter (\x -> x.id /= response.id) model.storageUnits }
+                            ( { model | drawers = List.filter (\x -> x.id /= response.id) model.drawers }
                             , Cmd.none
                             )
 
@@ -112,19 +113,24 @@ update _ user msg model =
                 GotResponse result ->
                     case result of
                         Ok response ->
-                            ( { model | state = Done, storageUnits = response }, Cmd.none )
+                            ( { model | state = Done, drawers = response }, Cmd.none )
 
                         Err _ ->
-                            ( { model | state = Failure, storageUnits = [] }, Cmd.none )
+                            ( { model | state = Failure, drawers = [] }, Cmd.none )
 
 
 
 -- VIEW
 
 
-newUrl : String -> String
-newUrl roomId =
-    toHref (Gen.Route.Rooms__RoomId___StorageUnits__New { roomId = roomId })
+newUrl : String -> String -> String
+newUrl roomId storageUnitId =
+    toHref
+        (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers__New
+            { roomId = roomId
+            , storageUnitId = storageUnitId
+            }
+        )
 
 
 view : Auth.User -> Model -> View Msg
@@ -132,56 +138,51 @@ view user model =
     { title = "Homepage"
     , body =
         UI.layout (Just user)
-            [ h1 [] [ text "Storage units" ]
+            [ h1 [] [ text "Drawers" ]
             , case model.state of
                 Failure ->
-                    div [] [ text "Failed to load storage units." ]
+                    div [] [ text "Failed to load drawers." ]
 
                 DeleteFailure ->
-                    div [] [ text "Failed to delete a storage unit." ]
+                    div [] [ text "Failed to delete a drawer." ]
 
                 Loading ->
-                    div [] [ text "Loading storage units..." ]
+                    div [] [ text "Loading drawers..." ]
 
                 Done ->
                     table
                         []
                         (thead []
                             [ th [] [ text "ID" ]
-                            , th [] [ text "Name" ]
+                            , th [] [ text "Note" ]
+                            , th [] [ text "Level" ]
                             , th [] [ text "" ]
                             , th [] [ text "" ]
                             ]
-                            :: List.map storageUnitRow model.storageUnits
+                            :: List.map drawerRow model.drawers
                         )
-            , a [ href (newUrl model.roomId) ] [ text "Add new storage unit" ]
+            , a [ href (newUrl model.roomId model.storageUnitId) ] [ text "Add new drawer" ]
             ]
     }
 
 
-storageUnitRow : StorageUnit -> Html Msg
-storageUnitRow storageUnit =
+drawerRow : Drawer -> Html Msg
+drawerRow drawer =
     let
         editUrl =
             toHref
-                (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Edit
-                    { roomId = String.fromInt storageUnit.room_id
-                    , storageUnitId = String.fromInt storageUnit.id
-                    }
-                )
-
-        drawersUrl =
-            toHref
-                (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers
-                    { roomId = String.fromInt storageUnit.room_id
-                    , storageUnitId = String.fromInt storageUnit.id
+                (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers__DrawerId___Edit
+                    { roomId = String.fromInt 1
+                    , storageUnitId = String.fromInt drawer.storage_unit_id
+                    , drawerId = String.fromInt drawer.id
                     }
                 )
     in
     tr []
-        [ td [] [ text (String.fromInt storageUnit.id) ]
-        , td [] [ text storageUnit.name ]
-        , td [] [ a [ href drawersUrl ] [ text "Drawers" ] ]
+        [ td [] [ text (String.fromInt drawer.id) ]
+        , td [] [ text drawer.note ]
+        , td [] [ text (String.fromInt drawer.level) ]
+        , td [] [ a [ href ("/items/" ++ String.fromInt drawer.id) ] [ text "Items" ] ]
         , td [] [ a [ href editUrl ] [ text "Edit" ] ]
-        , td [] [ button [ onClick (Delete storageUnit.id) ] [ text "Delete" ] ]
+        , td [] [ button [ onClick (Delete drawer.id) ] [ text "Delete" ] ]
         ]

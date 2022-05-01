@@ -3,7 +3,7 @@ module Pages.Rooms exposing (Model, Msg, page)
 import Auth
 import Const exposing (host)
 import Domain.Room exposing (Room, Rooms, roomDecoder, roomsDecoder)
-import Gen.Route
+import Gen.Route exposing (toHref)
 import Html exposing (Html, a, button, div, h1, table, td, text, th, thead, tr)
 import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
@@ -154,12 +154,18 @@ roomRow : Room -> Html Msg
 roomRow room =
     let
         editUrl =
-            Gen.Route.toHref (Gen.Route.Rooms__Id___Edit { id = String.fromInt room.id })
+            toHref (Gen.Route.Rooms__Id___Edit { id = String.fromInt room.id })
+
+        storageUnitUrl =
+            toHref
+                (Gen.Route.Rooms__Room_id___StorageUnits { room_id = String.fromInt room.id })
     in
     tr []
         [ td [] [ text (String.fromInt room.id) ]
         , td [] [ text room.name ]
-        , td [] [ a [ href ("/storage_units/" ++ String.fromInt room.id) ] [ text "Storage units" ] ]
+        , td []
+            [ a [ href storageUnitUrl ] [ text "Storage units" ]
+            ]
         , td [] [ a [ href editUrl ] [ text "Edit" ] ]
         , td [] [ button [ onClick (Delete room.id) ] [ text "Delete" ] ]
         ]

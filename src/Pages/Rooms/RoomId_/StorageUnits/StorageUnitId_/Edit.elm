@@ -1,9 +1,9 @@
-module Pages.Rooms.Id_.Edit exposing (Model, Msg, page)
+module Pages.Rooms.RoomId_.StorageUnits.StorageUnitId_.Edit exposing (Model, Msg, page)
 
 import Auth exposing (User)
 import Const exposing (host)
-import Domain.Room exposing (Room, roomDecoder)
-import Gen.Params.Rooms.Id_.Edit exposing (Params)
+import Domain.StorageUnit exposing (StorageUnit, storageUnitDecoder)
+import Gen.Params.Rooms.RoomId_.StorageUnits.StorageUnitId_.Edit exposing (Params)
 import Gen.Route
 import Html exposing (button, div, form, input, label, text)
 import Html.Attributes exposing (disabled, type_, value)
@@ -40,7 +40,8 @@ type State
 
 type alias Model =
     { state : State
-    , room : Maybe Room
+    , roomId : String
+    , storageUnit : Maybe StorageUnit
     }
 
 
@@ -48,18 +49,18 @@ init : Request.With Params -> Storage -> ( Model, Cmd Msg )
 init req storage =
     case storage.user of
         Nothing ->
-            ( { state = Failure, room = Nothing }
+            ( { state = Failure, storageUnit = Nothing, roomId = req.params.roomId }
             , Cmd.none
             )
 
         Just user ->
-            ( { state = Loading, room = Nothing }
+            ( { state = Loading, storageUnit = Nothing, roomId = req.params.roomId }
             , Http.request
                 { method = "GET"
                 , headers = [ header "token" user.token ]
-                , url = host ++ "/rooms/" ++ req.params.id
+                , url = host ++ "/storage_units/" ++ req.params.storageUnitId
                 , body = Http.emptyBody
-                , expect = Http.expectJson GotGetResponse roomDecoder
+                , expect = Http.expectJson GotGetResponse storageUnitDecoder
                 , timeout = Nothing
                 , tracker = Nothing
                 }
@@ -72,9 +73,9 @@ init req storage =
 
 type Msg
     = UpdatedName String
-    | SubmittedRoomForm
-    | GotGetResponse (Result Http.Error Room)
-    | GotPatchResponse (Result Http.Error Room)
+    | SubmittedStorageUnitForm
+    | GotGetResponse (Result Http.Error StorageUnit)
+    | GotPatchResponse (Result Http.Error StorageUnit)
 
 
 update : Request.With Params -> Maybe User -> Msg -> Model -> ( Model, Cmd Msg )
@@ -86,16 +87,16 @@ update req user msg model =
         Just u ->
             case msg of
                 UpdatedName name ->
-                    case model.room of
+                    case model.storageUnit of
                         Nothing ->
-                            ( { model | room = Nothing }, Cmd.none )
+                            ( { model | storageUnit = Nothing }, Cmd.none )
 
                         Just r ->
-                            ( { model | room = Just { id = r.id, name = name } }, Cmd.none )
+                            ( { model | storageUnit = Just { id = r.id, room_id = r.room_id, name = name } }, Cmd.none )
 
-                SubmittedRoomForm ->
+                SubmittedStorageUnitForm ->
                     ( model
-                    , case model.room of
+                    , case model.storageUnit of
                         Nothing ->
                             Cmd.none
 
@@ -103,10 +104,10 @@ update req user msg model =
                             Http.request
                                 { method = "PATCH"
                                 , headers = [ header "token" u.token ]
-                                , url = host ++ "/rooms/" ++ String.fromInt r.id
+                                , url = host ++ "/storage_units/" ++ String.fromInt r.id
                                 , body =
                                     multipartBody [ stringPart "name" r.name ]
-                                , expect = Http.expectJson GotPatchResponse roomDecoder
+                                , expect = Http.expectJson GotPatchResponse storageUnitDecoder
                                 , timeout = Nothing
                                 , tracker = Nothing
                                 }
@@ -114,8 +115,8 @@ update req user msg model =
 
                 GotGetResponse result ->
                     case result of
-                        Ok r ->
-                            ( { state = Loaded, room = Just r }, Cmd.none )
+                        Ok s ->
+                            ( { model | state = Loaded, storageUnit = Just s }, Cmd.none )
 
                         Err _ ->
                             ( model, Cmd.none )
@@ -124,7 +125,7 @@ update req user msg model =
                     case result of
                         Ok _ ->
                             ( model
-                            , Request.pushRoute Gen.Route.Rooms req
+                            , Request.pushRoute (Gen.Route.Rooms__RoomId___StorageUnits { roomId = model.roomId }) req
                             )
 
                         Err _ ->
@@ -148,12 +149,12 @@ view user model =
                     div [] [ text "Updating..." ]
 
                 Loaded ->
-                    case model.room of
+                    case model.storageUnit of
                         Nothing ->
                             button [ disabled True ] [ text "Update" ]
 
                         Just r ->
-                            form [ onSubmit SubmittedRoomForm ]
+                            form [ onSubmit SubmittedStorageUnitForm ]
                                 [ label []
                                     [ div []
                                         [ text "Name:"

@@ -1,9 +1,9 @@
-module Pages.Rooms.Room_id_.StorageUnits exposing (Model, Msg, page)
+module Pages.Rooms.RoomId_.StorageUnits exposing (Model, Msg, page)
 
 import Auth exposing (User)
 import Const exposing (host)
 import Domain.StorageUnit exposing (StorageUnit, StorageUnits, storageUnitDecoder, storageUnitsDecoder)
-import Gen.Params.Rooms.Room_id_.StorageUnits exposing (Params)
+import Gen.Params.Rooms.RoomId_.StorageUnits exposing (Params)
 import Gen.Route exposing (toHref)
 import Html exposing (Html, a, button, div, h1, table, td, text, th, thead, tr)
 import Html.Attributes exposing (href)
@@ -50,16 +50,16 @@ init : Request.With Params -> Storage -> ( Model, Cmd Msg )
 init { params } storage =
     case storage.user of
         Nothing ->
-            ( { state = Failure, storageUnits = [], roomId = params.room_id }
+            ( { state = Failure, storageUnits = [], roomId = params.roomId }
             , Cmd.none
             )
 
         Just user ->
-            ( { state = Loading, storageUnits = [], roomId = params.room_id }
+            ( { state = Loading, storageUnits = [], roomId = params.roomId }
             , Http.request
                 { method = "GET"
                 , headers = [ header "token" user.token ]
-                , url = host ++ "/storage_units?room_id=" ++ params.room_id
+                , url = host ++ "/storage_units?room_id=" ++ params.roomId
                 , body = Http.emptyBody
                 , expect = Http.expectJson GotResponse storageUnitsDecoder
                 , timeout = Nothing
@@ -79,7 +79,7 @@ type Msg
 
 
 update : Request.With Params -> Maybe User -> Msg -> Model -> ( Model, Cmd Msg )
-update req user msg model =
+update _ user msg model =
     case user of
         Nothing ->
             ( model, Cmd.none )
@@ -124,7 +124,7 @@ update req user msg model =
 
 newUrl : String -> String
 newUrl roomId =
-    toHref (Gen.Route.Rooms__Room_id___StorageUnits__New { room_id = roomId })
+    toHref (Gen.Route.Rooms__RoomId___StorageUnits__New { roomId = roomId })
 
 
 view : Auth.User -> Model -> View Msg
@@ -161,15 +161,19 @@ view user model =
 
 storageUnitRow : StorageUnit -> Html Msg
 storageUnitRow storageUnit =
-    -- let
-    --     editUrl =
-    --         Gen.Route.toHref (Gen.Route.StorageUnits__Id___Edit { id = String.fromInt storageUnit.id })
-    -- in
+    let
+        editUrl =
+            toHref
+                (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Edit
+                    { roomId = String.fromInt storageUnit.room_id
+                    , storageUnitId = String.fromInt storageUnit.id
+                    }
+                )
+    in
     tr []
         [ td [] [ text (String.fromInt storageUnit.id) ]
         , td [] [ text storageUnit.name ]
         , td [] [ a [ href ("/drawers/" ++ String.fromInt storageUnit.id) ] [ text "Drawers" ] ]
-
-        -- , td [] [ a [ href editUrl ] [ text "Edit" ] ]
+        , td [] [ a [ href editUrl ] [ text "Edit" ] ]
         , td [] [ button [ onClick (Delete storageUnit.id) ] [ text "Delete" ] ]
         ]

@@ -1,9 +1,9 @@
-module Pages.Rooms.Room_id_.StorageUnits.New exposing (Model, Msg, page)
+module Pages.Rooms.RoomId_.StorageUnits.New exposing (Model, Msg, page)
 
 import Auth exposing (User)
 import Const exposing (host)
 import Domain.StorageUnit exposing (StorageUnit, storageUnitDecoder)
-import Gen.Params.Rooms.Room_id_.StorageUnits.New exposing (Params)
+import Gen.Params.Rooms.RoomId_.StorageUnits.New exposing (Params)
 import Gen.Route
 import Html exposing (button, div, form, input, label, text)
 import Html.Attributes exposing (disabled, type_)
@@ -47,7 +47,7 @@ type alias Model =
 
 init : Request.With Params -> Storage -> ( Model, Cmd Msg )
 init { params } _ =
-    ( { state = Pending, name = "", roomId = params.room_id }
+    ( { state = Pending, name = "", roomId = params.roomId }
     , Cmd.none
     )
 
@@ -91,7 +91,7 @@ update req user msg model =
                     case result of
                         Ok _ ->
                             ( model
-                            , Request.pushRoute (Gen.Route.Rooms__Room_id___StorageUnits { room_id = model.roomId }) req
+                            , Request.pushRoute (Gen.Route.Rooms__RoomId___StorageUnits { roomId = model.roomId }) req
                             )
 
                         Err _ ->

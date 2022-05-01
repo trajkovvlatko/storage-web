@@ -1,10 +1,10 @@
 module Domain.StorageUnit exposing (StorageUnit, StorageUnits, storageUnitDecoder, storageUnitsDecoder)
 
-import Json.Decode exposing (Decoder, field, int, list, map2, string)
+import Json.Decode exposing (Decoder, field, int, list, map3, string)
 
 
 type alias StorageUnit =
-    { id : Int, name : String }
+    { id : Int, room_id : Int, name : String }
 
 
 type alias StorageUnits =
@@ -18,6 +18,7 @@ storageUnitsDecoder =
 
 storageUnitDecoder : Decoder StorageUnit
 storageUnitDecoder =
-    map2 StorageUnit
+    map3 StorageUnit
         (field "id" int)
+        (field "room_id" int)
         (field "name" string)

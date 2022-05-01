@@ -154,11 +154,11 @@ roomRow : Room -> Html Msg
 roomRow room =
     let
         editUrl =
-            toHref (Gen.Route.Rooms__Id___Edit { id = String.fromInt room.id })
+            toHref (Gen.Route.Rooms__RoomId___Edit { roomId = String.fromInt room.id })
 
         storageUnitUrl =
             toHref
-                (Gen.Route.Rooms__Room_id___StorageUnits { room_id = String.fromInt room.id })
+                (Gen.Route.Rooms__RoomId___StorageUnits { roomId = String.fromInt room.id })
     in
     tr []
         [ td [] [ text (String.fromInt room.id) ]

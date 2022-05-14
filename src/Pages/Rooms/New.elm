@@ -102,7 +102,7 @@ update req user msg model =
 
 view : Auth.User -> Model -> View Msg
 view user model =
-    { title = "Homepage"
+    { title = "Add new room"
     , body =
         UI.layout (Just user)
             [ form [ onSubmit SubmittedRoomForm ]

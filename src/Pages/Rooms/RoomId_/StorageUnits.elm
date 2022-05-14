@@ -129,7 +129,7 @@ newUrl roomId =
 
 view : Auth.User -> Model -> View Msg
 view user model =
-    { title = "Homepage"
+    { title = "Storage units"
     , body =
         UI.layout (Just user)
             [ h1 [] [ text "Storage units" ]

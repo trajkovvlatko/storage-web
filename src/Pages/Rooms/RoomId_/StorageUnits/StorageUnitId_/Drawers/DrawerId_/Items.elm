@@ -147,7 +147,7 @@ newUrl roomId storageUnitId drawerId =
 
 view : Auth.User -> Model -> View Msg
 view user model =
-    { title = "Homepage"
+    { title = "Items"
     , body =
         UI.layout (Just user)
             [ h1 [] [ text "Items" ]

@@ -120,7 +120,7 @@ update storage msg model =
 
 view : Auth.User -> Model -> View Msg
 view user model =
-    { title = "Homepage"
+    { title = "Rooms"
     , body =
         UI.layout (Just user)
             [ h1 [] [ text "Rooms" ]

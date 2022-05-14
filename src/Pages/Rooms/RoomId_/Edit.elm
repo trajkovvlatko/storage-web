@@ -137,7 +137,7 @@ update req user msg model =
 
 view : Auth.User -> Model -> View Msg
 view user model =
-    { title = "Homepage"
+    { title = "Edit room"
     , body =
         UI.layout (Just user)
             [ case model.state of

@@ -2,11 +2,13 @@ module Pages.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers.DrawerId_.Items.N
 
 import Auth exposing (User)
 import Const exposing (host)
+import Domain.Color exposing (Color, Colors, colorsDecoder)
 import Domain.Item exposing (Item, itemDecoder)
+import Domain.ItemType exposing (ItemType, ItemTypes, itemTypesDecoder)
 import Gen.Params.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers.DrawerId_.Items exposing (Params)
 import Gen.Route
-import Html exposing (button, div, form, input, label, text)
-import Html.Attributes exposing (disabled, type_)
+import Html exposing (Html, button, div, form, input, label, option, select, text)
+import Html.Attributes exposing (disabled, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (header, multipartBody, stringPart)
 import Page
@@ -46,11 +48,13 @@ type alias Model =
     , roomId : String
     , storageUnitId : String
     , drawerId : String
+    , colors : Colors
+    , itemTypes : ItemTypes
     }
 
 
 init : Request.With Params -> Storage -> ( Model, Cmd Msg )
-init { params } _ =
+init { params } storage =
     ( { state = Pending
       , name = ""
       , colorId = ""
@@ -58,9 +62,50 @@ init { params } _ =
       , roomId = params.roomId
       , storageUnitId = params.storageUnitId
       , drawerId = params.drawerId
+      , colors = []
+      , itemTypes = []
       }
-    , Cmd.none
+    , Cmd.batch
+        [ fetchColorsCmd storage
+        , fetchItemTypesCmd storage
+        ]
     )
+
+
+fetchColorsCmd : Storage -> Cmd Msg
+fetchColorsCmd storage =
+    case storage.user of
+        Nothing ->
+            Cmd.none
+
+        Just user ->
+            Http.request
+                { method = "GET"
+                , headers = [ header "token" user.token ]
+                , url = host ++ "/colors"
+                , body = Http.emptyBody
+                , expect = Http.expectJson GotColorsResponse colorsDecoder
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+
+
+fetchItemTypesCmd : Storage -> Cmd Msg
+fetchItemTypesCmd storage =
+    case storage.user of
+        Nothing ->
+            Cmd.none
+
+        Just user ->
+            Http.request
+                { method = "GET"
+                , headers = [ header "token" user.token ]
+                , url = host ++ "/item_types"
+                , body = Http.emptyBody
+                , expect = Http.expectJson GotItemTypesResponse itemTypesDecoder
+                , timeout = Nothing
+                , tracker = Nothing
+                }
 
 
 
@@ -73,6 +118,8 @@ type Msg
     | UpdatedItemTypeId String
     | SubmittedItemForm
     | GotResponse (Result Http.Error Item)
+    | GotColorsResponse (Result Http.Error Colors)
+    | GotItemTypesResponse (Result Http.Error ItemTypes)
 
 
 update : Request.With Params -> Maybe User -> Msg -> Model -> ( Model, Cmd Msg )
@@ -128,9 +175,35 @@ update req user msg model =
                         Err _ ->
                             ( model, Cmd.none )
 
+                GotColorsResponse result ->
+                    case result of
+                        Ok colors ->
+                            ( { model | colors = colors }, Cmd.none )
+
+                        Err _ ->
+                            ( model, Cmd.none )
+
+                GotItemTypesResponse result ->
+                    case result of
+                        Ok itemTypes ->
+                            ( { model | itemTypes = itemTypes }, Cmd.none )
+
+                        Err _ ->
+                            ( model, Cmd.none )
+
 
 
 -- VIEW
+
+
+colorOption : Color -> Html Msg
+colorOption color =
+    option [ value (String.fromInt color.id) ] [ text color.label ]
+
+
+itemTypeOption : ItemType -> Html Msg
+itemTypeOption itemType =
+    option [ value (String.fromInt itemType.id) ] [ text itemType.label ]
 
 
 view : Auth.User -> Model -> View Msg
@@ -148,13 +221,13 @@ view user model =
                 , label []
                     [ div []
                         [ text "Color id:"
-                        , input [ type_ "number", onInput UpdatedColorId ] []
+                        , select [ onInput UpdatedColorId ] (List.map colorOption model.colors)
                         ]
                     ]
                 , label []
                     [ div []
                         [ text "Item type id:"
-                        , input [ type_ "number", onInput UpdatedItemTypeId ] []
+                        , select [ onInput UpdatedItemTypeId ] (List.map itemTypeOption model.itemTypes)
                         ]
                     ]
                 , case model.state of

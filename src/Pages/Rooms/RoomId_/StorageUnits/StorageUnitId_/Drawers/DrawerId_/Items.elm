@@ -181,23 +181,22 @@ view user model =
 
 itemRow : Model -> Item -> Html Msg
 itemRow model item =
-    -- let
-    --     editUrl =
-    --         toHref
-    --             (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers__DrawerId___Edit
-    --                 { roomId = String.fromInt 1 -- TODO FIX THIS
-    --                 , storageUnitId = String.fromInt item.storage_unit_id
-    --                 , drawerId = String.fromInt item.drawer_id
-    --                 , itemId = String.fromInt item.id
-    --                 }
-    --             )
-    -- in
+    let
+        editUrl =
+            toHref
+                (Gen.Route.Rooms__RoomId___StorageUnits__StorageUnitId___Drawers__DrawerId___Items__ItemId___Edit
+                    { roomId = model.roomId
+                    , storageUnitId = model.storageUnitId
+                    , drawerId = model.drawerId
+                    , itemId = String.fromInt item.id
+                    }
+                )
+    in
     tr []
         [ td [] [ text (String.fromInt item.id) ]
         , td [] [ text item.name ]
         , td [] [ text (String.fromInt item.color_id) ]
         , td [] [ text (String.fromInt item.item_type_id) ]
-
-        -- , td [] [ a [ href editUrl ] [ text "Edit" ] ]
+        , td [] [ a [ href editUrl ] [ text "Edit" ] ]
         , td [] [ button [ onClick (Delete item.id) ] [ text "Delete" ] ]
         ]

@@ -46,7 +46,7 @@ update req msg model =
     case msg of
         StorageUpdated storage ->
             ( { model | storage = storage }
-            , if Gen.Route.Login == req.route then
+            , if Gen.Route.Login == req.route || Gen.Route.Register == req.route then
                 Request.pushRoute Gen.Route.Home_ req
 
               else

@@ -3,7 +3,7 @@ module Pages.Login exposing (Model, Msg, page)
 import Const exposing (host)
 import Gen.Params.Login exposing (Params)
 import Html exposing (button, div, form, input, label, text)
-import Html.Attributes exposing (disabled, type_)
+import Html.Attributes exposing (disabled, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (multipartBody, stringPart)
 import Json.Decode exposing (Decoder, field, string)
@@ -29,17 +29,22 @@ page shared _ =
 -- INIT
 
 
+type State
+    = Idle
+    | Failure
+
+
 type alias Credentials =
     { email : String, password : String }
 
 
 type alias Model =
-    { credentials : Credentials }
+    { state : State, credentials : Credentials }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { credentials = { email = "email@email.com", password = "password" } }
+    ( { state = Idle, credentials = { email = "", password = "" } }
     , Cmd.none
     )
 
@@ -68,8 +73,8 @@ update storage msg model =
             , Cmd.none
             )
 
-        UpdatedPassword _ ->
-            ( { model | credentials = { email = model.credentials.email, password = model.credentials.password } }
+        UpdatedPassword password ->
+            ( { model | credentials = { email = model.credentials.email, password = password } }
             , Cmd.none
             )
 
@@ -89,12 +94,17 @@ update storage msg model =
         LoginResponse result ->
             case result of
                 Ok response ->
-                    ( model
+                    ( { model | state = Idle }
                     , Storage.login { token = response } storage
                     )
 
                 Err _ ->
-                    ( model, Cmd.none )
+                    ( { model | state = Failure }, Cmd.none )
+
+
+validate : Model -> Bool
+validate { credentials } =
+    not (String.isEmpty credentials.email) && not (String.isEmpty credentials.password)
 
 
 
@@ -110,15 +120,21 @@ view model =
                 [ label []
                     [ div []
                         [ text "Email:"
-                        , input [ type_ "text", onInput UpdatedEmail ] []
+                        , input [ type_ "text", onInput UpdatedEmail, value model.credentials.email ] []
                         ]
                     , div []
                         [ text "Password:"
-                        , input [ type_ "password", onInput UpdatedPassword ] []
+                        , input [ type_ "password", onInput UpdatedPassword, value model.credentials.password ] []
                         ]
+                    , case model.state of
+                        Idle ->
+                            div [] []
+
+                        Failure ->
+                            div [] [ text "Invalid login" ]
                     ]
                 , button
-                    [ disabled (String.isEmpty model.credentials.email && String.isEmpty model.credentials.password) ]
+                    [ disabled (not (validate model)) ]
                     [ text "Login" ]
                 ]
             ]

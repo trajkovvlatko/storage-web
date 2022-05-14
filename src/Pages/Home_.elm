@@ -62,7 +62,6 @@ type Msg
     = UpdateSearchTerm String
     | RunSearch
     | GotResponse (Result Http.Error SearchResults)
-    | ClickedLogout
 
 
 update : Storage -> Msg -> Model -> ( Model, Cmd Msg )
@@ -73,11 +72,6 @@ update storage msg model =
 
         Just u ->
             case msg of
-                ClickedLogout ->
-                    ( model
-                    , Storage.logout storage
-                    )
-
                 UpdateSearchTerm term ->
                     ( { model | term = term }, Cmd.none )
 
@@ -139,7 +133,6 @@ view user model =
                             ]
                             :: List.map resultRow model.results
                         )
-            , button [ onClick ClickedLogout ] [ text "Logout" ]
             ]
     }
 

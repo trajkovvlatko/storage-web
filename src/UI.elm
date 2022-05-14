@@ -10,7 +10,11 @@ authButtons : Maybe Auth.User -> Html msg
 authButtons user =
     case user of
         Nothing ->
-            a [ href (Route.toHref Route.Login) ] [ text "Login" ]
+            div []
+                [ a [ href (Route.toHref Route.Login) ] [ text "Login" ]
+                , text " | "
+                , a [ href (Route.toHref Route.Register) ] [ text "Register" ]
+                ]
 
         Just _ ->
             div []
@@ -18,7 +22,7 @@ authButtons user =
                 , text " | "
                 , a [ href (Route.toHref Route.Rooms) ] [ text "Browse" ]
                 , text " | "
-                , a [ href (Route.toHref Route.Home_) ] [ text "Logout" ]
+                , a [ href (Route.toHref Route.Logout) ] [ text "Logout" ]
                 ]
 
 

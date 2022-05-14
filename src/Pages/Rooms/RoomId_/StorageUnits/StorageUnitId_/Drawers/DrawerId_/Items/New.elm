@@ -174,14 +174,16 @@ view user model =
                     ]
                 , label []
                     [ div []
-                        [ text "Color id:"
-                        , select [ onInput UpdatedColorId ] (List.map colorOption model.colors)
+                        [ text "Color:"
+                        , select [ onInput UpdatedColorId ]
+                            (List.map (\c -> colorOption c -1) model.colors)
                         ]
                     ]
                 , label []
                     [ div []
-                        [ text "Item type id:"
-                        , select [ onInput UpdatedItemTypeId ] (List.map itemTypeOption model.itemTypes)
+                        [ text "Item type:"
+                        , select [ onInput UpdatedItemTypeId ]
+                            (List.map (\i -> itemTypeOption i -1) model.itemTypes)
                         ]
                     ]
                 , case model.state of

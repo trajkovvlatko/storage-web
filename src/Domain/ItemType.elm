@@ -2,8 +2,8 @@ module Domain.ItemType exposing (ItemType, ItemTypes, fetchItemTypesCmd, itemTyp
 
 import Const exposing (host)
 import Html exposing (Html, option, text)
-import Html.Attributes exposing (value)
-import Http exposing (Expect, header, multipartBody, stringPart)
+import Html.Attributes exposing (selected, value)
+import Http exposing (Expect, header)
 import Json.Decode exposing (Decoder, field, int, list, map2, string)
 import Storage exposing (Storage)
 
@@ -46,6 +46,6 @@ fetchItemTypesCmd storage expect =
                 }
 
 
-itemTypeOption : ItemType -> Html msg
-itemTypeOption itemType =
-    option [ value (String.fromInt itemType.id) ] [ text itemType.label ]
+itemTypeOption : ItemType -> Int -> Html msg
+itemTypeOption itemType selectedItemTypeId =
+    option [ selected (itemType.id == selectedItemTypeId), value (String.fromInt itemType.id) ] [ text itemType.label ]

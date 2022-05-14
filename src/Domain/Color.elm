@@ -2,8 +2,8 @@ module Domain.Color exposing (Color, Colors, colorDecoder, colorOption, colorsDe
 
 import Const exposing (host)
 import Html exposing (Html, option, text)
-import Html.Attributes exposing (value)
-import Http exposing (Expect, header, multipartBody, stringPart)
+import Html.Attributes exposing (selected, value)
+import Http exposing (Expect, header)
 import Json.Decode exposing (Decoder, field, int, list, map2, string)
 import Storage exposing (Storage)
 
@@ -46,6 +46,6 @@ fetchColorsCmd storage expect =
                 }
 
 
-colorOption : Color -> Html msg
-colorOption color =
-    option [ value (String.fromInt color.id) ] [ text color.label ]
+colorOption : Color -> Int -> Html msg
+colorOption color selectedColorId =
+    option [ selected (color.id == selectedColorId), value (String.fromInt color.id) ] [ text color.label ]

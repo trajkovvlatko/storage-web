@@ -270,18 +270,30 @@ view user model =
                                         , input [ type_ "text", onInput UpdatedName, value r.name ] []
                                         ]
                                     ]
-                                , label []
-                                    [ div []
-                                        [ text "Color id:"
-                                        , select [ onInput UpdatedColorId ] (List.map colorOption model.colors)
-                                        ]
-                                    ]
-                                , label []
-                                    [ div []
-                                        [ text "Item type id:"
-                                        , select [ onInput UpdatedItemTypeId ] (List.map itemTypeOption model.itemTypes)
-                                        ]
-                                    ]
+                                , case model.colors of
+                                    [] ->
+                                        div [] [ text "loading..." ]
+
+                                    _ ->
+                                        label []
+                                            [ div []
+                                                [ text "Color:"
+                                                , select [ onInput UpdatedColorId ]
+                                                    (List.map (\c -> colorOption c r.color_id) model.colors)
+                                                ]
+                                            ]
+                                , case model.itemTypes of
+                                    [] ->
+                                        div [] [ text "loading..." ]
+
+                                    _ ->
+                                        label []
+                                            [ div []
+                                                [ text "Item type:"
+                                                , select [ onInput UpdatedItemTypeId ]
+                                                    (List.map (\i -> itemTypeOption i r.item_type_id) model.itemTypes)
+                                                ]
+                                            ]
                                 , button [ disabled (String.isEmpty r.name) ] [ text "Update" ]
                                 ]
             ]

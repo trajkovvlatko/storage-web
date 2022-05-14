@@ -11,6 +11,7 @@ import Html exposing (Html, button, div, form, input, label, option, select, tex
 import Html.Attributes exposing (disabled, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (header, multipartBody, stringPart)
+import List exposing (head)
 import Page
 import Request
 import Shared
@@ -142,7 +143,12 @@ update req user msg model =
                 GotColorsResponse result ->
                     case result of
                         Ok colors ->
-                            ( { model | colors = colors }, Cmd.none )
+                            case head colors of
+                                Nothing ->
+                                    ( model, Cmd.none )
+
+                                Just ic ->
+                                    ( { model | colors = colors, colorId = String.fromInt ic.id }, Cmd.none )
 
                         Err _ ->
                             ( model, Cmd.none )
@@ -150,7 +156,12 @@ update req user msg model =
                 GotItemTypesResponse result ->
                     case result of
                         Ok itemTypes ->
-                            ( { model | itemTypes = itemTypes }, Cmd.none )
+                            case head itemTypes of
+                                Nothing ->
+                                    ( model, Cmd.none )
+
+                                Just iIt ->
+                                    ( { model | itemTypes = itemTypes, itemTypeId = String.fromInt iIt.id }, Cmd.none )
 
                         Err _ ->
                             ( model, Cmd.none )

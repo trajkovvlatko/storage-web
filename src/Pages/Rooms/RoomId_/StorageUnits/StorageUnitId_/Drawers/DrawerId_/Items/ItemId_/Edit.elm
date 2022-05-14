@@ -133,6 +133,8 @@ update req user msg model =
                                         , name = name
                                         , color_id = r.color_id
                                         , item_type_id = r.item_type_id
+                                        , color_label = r.color_label
+                                        , item_type_label = r.item_type_label
                                         }
                               }
                             , Cmd.none
@@ -147,6 +149,8 @@ update req user msg model =
                                         { id = r.id
                                         , drawer_id = r.drawer_id
                                         , name = r.name
+                                        , item_type_label = r.item_type_label
+                                        , color_label = r.color_label
                                         , item_type_id = r.item_type_id
                                         , color_id = l
                                         }
@@ -167,6 +171,8 @@ update req user msg model =
                                         , drawer_id = r.drawer_id
                                         , name = r.name
                                         , color_id = r.color_id
+                                        , item_type_label = r.item_type_label
+                                        , color_label = r.color_label
                                         , item_type_id = l
                                         }
                               }

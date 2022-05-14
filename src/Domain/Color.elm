@@ -1,6 +1,11 @@
-module Domain.Color exposing (Color, Colors, colorDecoder, colorsDecoder)
+module Domain.Color exposing (Color, Colors, colorDecoder, colorOption, colorsDecoder, fetchColorsCmd)
 
+import Const exposing (host)
+import Html exposing (Html, option, text)
+import Html.Attributes exposing (value)
+import Http exposing (Expect, header, multipartBody, stringPart)
 import Json.Decode exposing (Decoder, field, int, list, map2, string)
+import Storage exposing (Storage)
 
 
 type alias Color =
@@ -21,3 +26,26 @@ colorDecoder =
     map2 Color
         (field "id" int)
         (field "label" string)
+
+
+fetchColorsCmd : Storage -> Expect msg -> Cmd msg
+fetchColorsCmd storage expect =
+    case storage.user of
+        Nothing ->
+            Cmd.none
+
+        Just user ->
+            Http.request
+                { method = "GET"
+                , headers = [ header "token" user.token ]
+                , url = host ++ "/colors"
+                , body = Http.emptyBody
+                , expect = expect
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+
+
+colorOption : Color -> Html msg
+colorOption color =
+    option [ value (String.fromInt color.id) ] [ text color.label ]

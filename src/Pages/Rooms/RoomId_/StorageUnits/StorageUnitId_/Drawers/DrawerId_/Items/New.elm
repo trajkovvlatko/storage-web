@@ -2,9 +2,9 @@ module Pages.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers.DrawerId_.Items.N
 
 import Auth exposing (User)
 import Const exposing (host)
-import Domain.Color exposing (Color, Colors, colorsDecoder)
+import Domain.Color exposing (Color, Colors, colorOption, colorsDecoder, fetchColorsCmd)
 import Domain.Item exposing (Item, itemDecoder)
-import Domain.ItemType exposing (ItemType, ItemTypes, itemTypesDecoder)
+import Domain.ItemType exposing (ItemType, ItemTypes, fetchItemTypesCmd, itemTypeOption, itemTypesDecoder)
 import Gen.Params.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers.DrawerId_.Items exposing (Params)
 import Gen.Route
 import Html exposing (Html, button, div, form, input, label, option, select, text)
@@ -66,46 +66,10 @@ init { params } storage =
       , itemTypes = []
       }
     , Cmd.batch
-        [ fetchColorsCmd storage
-        , fetchItemTypesCmd storage
+        [ fetchColorsCmd storage (Http.expectJson GotColorsResponse colorsDecoder)
+        , fetchItemTypesCmd storage (Http.expectJson GotItemTypesResponse itemTypesDecoder)
         ]
     )
-
-
-fetchColorsCmd : Storage -> Cmd Msg
-fetchColorsCmd storage =
-    case storage.user of
-        Nothing ->
-            Cmd.none
-
-        Just user ->
-            Http.request
-                { method = "GET"
-                , headers = [ header "token" user.token ]
-                , url = host ++ "/colors"
-                , body = Http.emptyBody
-                , expect = Http.expectJson GotColorsResponse colorsDecoder
-                , timeout = Nothing
-                , tracker = Nothing
-                }
-
-
-fetchItemTypesCmd : Storage -> Cmd Msg
-fetchItemTypesCmd storage =
-    case storage.user of
-        Nothing ->
-            Cmd.none
-
-        Just user ->
-            Http.request
-                { method = "GET"
-                , headers = [ header "token" user.token ]
-                , url = host ++ "/item_types"
-                , body = Http.emptyBody
-                , expect = Http.expectJson GotItemTypesResponse itemTypesDecoder
-                , timeout = Nothing
-                , tracker = Nothing
-                }
 
 
 
@@ -194,16 +158,6 @@ update req user msg model =
 
 
 -- VIEW
-
-
-colorOption : Color -> Html Msg
-colorOption color =
-    option [ value (String.fromInt color.id) ] [ text color.label ]
-
-
-itemTypeOption : ItemType -> Html Msg
-itemTypeOption itemType =
-    option [ value (String.fromInt itemType.id) ] [ text itemType.label ]
 
 
 view : Auth.User -> Model -> View Msg

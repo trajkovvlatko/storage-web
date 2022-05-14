@@ -2,11 +2,12 @@ module Pages.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers.DrawerId_.Items.I
 
 import Auth exposing (User)
 import Const exposing (host)
-import Domain.Drawer exposing (Drawer, drawerDecoder)
+import Domain.Color exposing (Color, Colors, colorOption, colorsDecoder, fetchColorsCmd)
 import Domain.Item exposing (Item, itemDecoder)
+import Domain.ItemType exposing (ItemType, ItemTypes, fetchItemTypesCmd, itemTypeOption, itemTypesDecoder)
 import Gen.Params.Rooms.RoomId_.StorageUnits.StorageUnitId_.Drawers.DrawerId_.Items.ItemId_.Edit exposing (Params)
 import Gen.Route
-import Html exposing (button, div, form, input, label, text)
+import Html exposing (Html, button, div, form, input, label, option, select, text)
 import Html.Attributes exposing (disabled, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Http exposing (header, multipartBody, stringPart)
@@ -45,6 +46,8 @@ type alias Model =
     , storageUnitId : String
     , drawerId : String
     , item : Maybe Item
+    , colors : Colors
+    , itemTypes : ItemTypes
     }
 
 
@@ -57,6 +60,8 @@ init req storage =
               , storageUnitId = req.params.storageUnitId
               , drawerId = req.params.drawerId
               , item = Nothing
+              , colors = []
+              , itemTypes = []
               }
             , Cmd.none
             )
@@ -66,18 +71,29 @@ init req storage =
               , roomId = req.params.roomId
               , storageUnitId = req.params.storageUnitId
               , drawerId = req.params.drawerId
+              , colors = []
+              , itemTypes = []
               , item = Nothing
               }
-            , Http.request
-                { method = "GET"
-                , headers = [ header "token" user.token ]
-                , url = host ++ "/items/" ++ req.params.itemId
-                , body = Http.emptyBody
-                , expect = Http.expectJson GotGetResponse itemDecoder
-                , timeout = Nothing
-                , tracker = Nothing
-                }
+            , Cmd.batch
+                [ fetchColorsCmd storage (Http.expectJson GotColorsResponse colorsDecoder)
+                , fetchItemTypesCmd storage (Http.expectJson GotItemTypesResponse itemTypesDecoder)
+                , fetchItemCmd req user
+                ]
             )
+
+
+fetchItemCmd : Request.With Params -> User -> Cmd Msg
+fetchItemCmd req user =
+    Http.request
+        { method = "GET"
+        , headers = [ header "token" user.token ]
+        , url = host ++ "/items/" ++ req.params.itemId
+        , body = Http.emptyBody
+        , expect = Http.expectJson GotGetResponse itemDecoder
+        , timeout = Nothing
+        , tracker = Nothing
+        }
 
 
 
@@ -91,6 +107,8 @@ type Msg
     | SubmittedItemForm
     | GotGetResponse (Result Http.Error Item)
     | GotPatchResponse (Result Http.Error Item)
+    | GotColorsResponse (Result Http.Error Colors)
+    | GotItemTypesResponse (Result Http.Error ItemTypes)
 
 
 update : Request.With Params -> Maybe User -> Msg -> Model -> ( Model, Cmd Msg )
@@ -206,6 +224,22 @@ update req user msg model =
                         Err _ ->
                             ( model, Cmd.none )
 
+                GotColorsResponse result ->
+                    case result of
+                        Ok colors ->
+                            ( { model | colors = colors }, Cmd.none )
+
+                        Err _ ->
+                            ( model, Cmd.none )
+
+                GotItemTypesResponse result ->
+                    case result of
+                        Ok itemTypes ->
+                            ( { model | itemTypes = itemTypes }, Cmd.none )
+
+                        Err _ ->
+                            ( model, Cmd.none )
+
 
 
 -- VIEW
@@ -238,14 +272,14 @@ view user model =
                                     ]
                                 , label []
                                     [ div []
-                                        [ text "Color:"
-                                        , input [ type_ "number", onInput UpdatedColorId, value (String.fromInt r.color_id) ] []
+                                        [ text "Color id:"
+                                        , select [ onInput UpdatedColorId ] (List.map colorOption model.colors)
                                         ]
                                     ]
                                 , label []
                                     [ div []
-                                        [ text "Item Type:"
-                                        , input [ type_ "number", onInput UpdatedItemTypeId, value (String.fromInt r.item_type_id) ] []
+                                        [ text "Item type id:"
+                                        , select [ onInput UpdatedItemTypeId ] (List.map itemTypeOption model.itemTypes)
                                         ]
                                     ]
                                 , button [ disabled (String.isEmpty r.name) ] [ text "Update" ]

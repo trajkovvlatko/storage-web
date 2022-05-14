@@ -22,6 +22,10 @@ authButtons user =
                 , text " | "
                 , a [ href (Route.toHref Route.Rooms) ] [ text "Browse" ]
                 , text " | "
+                , a [ href (Route.toHref Route.Colors) ] [ text "Colors" ]
+                , text " | "
+                , a [ href (Route.toHref Route.ItemTypes) ] [ text "Item types" ]
+                , text " | "
                 , a [ href (Route.toHref Route.Logout) ] [ text "Logout" ]
                 ]
 
